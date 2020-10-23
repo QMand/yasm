@@ -3,7 +3,7 @@
 
 Lightweight library for creating function pointer based state machines
 
-Copyright 2016/2019 bricofoy bricofoy@free.fr
+Copyright 2016/2017 bricofoy bricofoy@free.fr
 
 
 Library provide basic functions for managing state machine execution
@@ -32,13 +32,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA */
 
 YASM::YASM()
 {
-    //
     _stateInfos.isStopped = true;
-    //set the state pointer to NULL just in case resume() is called before next()
+    //set the pointer to 0 just in case resume() is called before next()
     _pState=NULL;
 }
 
-void YASM::next(void (*pnextstate)(), bool reset/*=false*/)
+void YASM::next(void (*pnextstate)(void* x), bool reset/*=false*/)
 {
     //first check if we need to do something
     if ((!reset) && (!_stateInfos.isStopped) && (pnextstate == _pState))
@@ -53,7 +52,7 @@ void YASM::next(void (*pnextstate)(), bool reset/*=false*/)
 	_pState = pnextstate; 
 }
 
-bool YASM::run()
+bool YASM::run(void* x /*=NULL*/)
 {
     //first check if the machine is currently stopped
 	if(_stateInfos.isStopped) 
@@ -72,7 +71,7 @@ bool YASM::run()
     }
 
     //and run the current state
-	_pState(); 
+	_pState(x); 
     
     //then update execution informations for next time
     _stateInfos.isFirstRun = false; 
@@ -93,8 +92,7 @@ void YASM::resume()
 
 bool YASM::elapsed(unsigned long durationms)
 {
-	if (YASM::timeOnState()>durationms) 
-        return true;
+	if (YASM::timeOnState()>durationms) return true;
 	return false;
 }
 
@@ -105,11 +103,6 @@ bool YASM::periodic(unsigned long durationms, bool first/*=true*/)
 		_lastTime += time;
 		return true;
 	}
-	if(first) 
-        return _stateInfos.isFirstRun;
+	if(first) return _stateInfos.isFirstRun;
 	return false;
 }
-
-		
-		
-		
